@@ -1188,14 +1188,14 @@ public final class SandevistanLogic {
     }
 
     private static void syncGoodEffect(ServerPlayer p, SandevistanData d) {
-        MobEffectInstance cur = p.getEffect(ModRegistries.GOOD_MIND);
+        MobEffectInstance cur = p.getEffect(ModRegistries.GOOD_MIND.get());
         if (d.goodMind > 0f) {
             int want = (int) (d.goodMind * 20f) + 10;
             if (cur == null || Math.abs(cur.getDuration() - want) > 60) {
-                p.addEffect(new MobEffectInstance(ModRegistries.GOOD_MIND, want, 0, true, true, true));
+                p.addEffect(new MobEffectInstance(ModRegistries.GOOD_MIND.get(), want, 0, true, true, true));
             }
         } else if (cur != null) {
-            p.removeEffect(ModRegistries.GOOD_MIND);
+            p.removeEffect(ModRegistries.GOOD_MIND.get());
         }
     }
 

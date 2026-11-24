@@ -130,7 +130,7 @@ public final class ToolEvents {
             if (t.level() instanceof ServerLevel sl) sl.sendParticles(ParticleTypes.SNOWFLAKE, t.getX(), t.getY() + t.getBbHeight() / 2, t.getZ(), 12, 0.3, 0.4, 0.3, 0.02);
         }
         int vn = ToolMods.maxTier(w, ToolMods.VENOM);
-        if (vn > 0 && !t.getType().is(EntityTypeTags.UNDEAD)) t.addEffect(new MobEffectInstance(MobEffects.POISON, 5 * 20, vn - 1));
+        if (vn > 0 && t.getMobType() != net.minecraft.world.entity.MobType.UNDEAD) t.addEffect(new MobEffectInstance(MobEffects.POISON, 5 * 20, vn - 1));
         int wi = ToolMods.maxTier(w, ToolMods.WITHER);
         if (wi > 0) {
             MobEffectInstance eff = new MobEffectInstance(MobEffects.WITHER, 5 * 20, wi - 1);

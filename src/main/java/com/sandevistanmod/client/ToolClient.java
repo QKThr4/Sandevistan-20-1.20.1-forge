@@ -30,7 +30,7 @@ public final class ToolClient {
                 for (Item b : bows) {
                     net.minecraft.client.renderer.item.ItemProperties.register(b, pull, (st, lv, en, sd) -> {
                         if (en == null || en.getUseItem() != st) return 0.0f;
-                        float f = (st.getUseDuration(en) - en.getUseItemRemainingTicks()) / 20.0f;
+                        float f = (st.getUseDuration() - en.getUseItemRemainingTicks()) / 20.0f;
                         f = (f * f + f * 2.0f) / 3.0f;
                         return Math.min(1.0f, f);
                     });
@@ -40,7 +40,7 @@ public final class ToolClient {
                 for (Item b : xs) {
                     net.minecraft.client.renderer.item.ItemProperties.register(b, pull, (st, lv, en, sd) -> {
                         if (en == null || net.minecraft.world.item.CrossbowItem.isCharged(st) || en.getUseItem() != st) return 0.0f;
-                        return Math.min(1.0f, (st.getUseDuration(en) - en.getUseItemRemainingTicks()) / 25.0f);
+                        return Math.min(1.0f, (st.getUseDuration() - en.getUseItemRemainingTicks()) / 25.0f);
                     });
                     net.minecraft.client.renderer.item.ItemProperties.register(b, pulling, (st, lv, en, sd) ->
                             en != null && en.isUsingItem() && en.getUseItem() == st && !net.minecraft.world.item.CrossbowItem.isCharged(st) ? 1.0f : 0.0f);

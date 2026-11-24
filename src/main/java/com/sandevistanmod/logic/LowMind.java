@@ -22,8 +22,8 @@ import net.minecraft.world.phys.Vec3;
 public final class LowMind {
     private LowMind() {}
 
-    private static final ResourceLocation FATIGUE =
-            new ResourceLocation(SandevistanMod.MODID, "low_mind_fatigue");
+    private static final java.util.UUID FATIGUE =
+            java.util.UUID.nameUUIDFromBytes((SandevistanMod.MODID + ":low_mind_fatigue").getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
     /** A Mente maxima baixa NAO mexe mais na ciberpsicose: sem teto que sobe sozinho (era o bug da psicose travada). */
     public static float creepCap(SandevistanData d) {
@@ -47,7 +47,7 @@ public final class LowMind {
         int t = d.lowTier();
         // fadiga neural: ataque um pouco mais lento (4%, 8% ou 12%)
         SandevistanLogic.setMod(p, Attributes.ATTACK_SPEED, FATIGUE, -0.04 * t,
-                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL, t > 0);
+                AttributeModifier.Operation.MULTIPLY_TOTAL, t > 0);
         // desfaz a troca de hotbar mesmo se a Mente subir de volta
         float[] w = d.lowT;
         if (d.swapA >= 0) {

@@ -93,7 +93,7 @@ public final class AbilityWheel {
     public static void scroll(InputEvent.MouseScrollingEvent e) {
         if (!holding()) return;
         int n = list().size();
-        selected = Math.floorMod(selected - (int) Math.signum(e.getScrollDeltaY()), n);
+        selected = Math.floorMod(selected - (int) Math.signum(e.getScrollDelta()), n);
         showUntil = System.currentTimeMillis() + 2500L;
         e.setCanceled(true);
     }
