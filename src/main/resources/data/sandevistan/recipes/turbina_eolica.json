@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " V ",
+    "VSV",
+    "III"
+  ],
+  "key": {
+    "V": {
+      "item": "sandevistan:ventoinha"
+    },
+    "S": {
+      "item": "sandevistan:servo_motor"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "sandevistan:turbina_eolica"
+  }
+}

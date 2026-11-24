@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:copper_ingot"
+    },
+    {
+      "item": "minecraft:redstone"
+    },
+    {
+      "item": "sandevistan:barra_solda"
+    }
+  ],
+  "result": {
+    "count": 2,
+    "item": "sandevistan:placa_circuito"
+  }
+}

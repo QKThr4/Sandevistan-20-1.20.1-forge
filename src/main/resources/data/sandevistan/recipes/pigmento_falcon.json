@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:green_dye"
+    },
+    {
+      "item": "sandevistan:fluido_refrigerante"
+    }
+  ],
+  "result": {
+    "count": 2,
+    "item": "sandevistan:pigmento_falcon"
+  }
+}
