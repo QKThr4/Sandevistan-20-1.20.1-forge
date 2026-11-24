@@ -1,0 +1,76 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "mode": "0"
+      },
+      "apply": {
+        "model": "sandevistan:block/cabo_energia_core0"
+      }
+    },
+    {
+      "when": {
+        "mode": "1"
+      },
+      "apply": {
+        "model": "sandevistan:block/cabo_energia_core1"
+      }
+    },
+    {
+      "when": {
+        "mode": "2"
+      },
+      "apply": {
+        "model": "sandevistan:block/cabo_energia_core2"
+      }
+    },
+    {
+      "when": {
+        "down": "true"
+      },
+      "apply": {
+        "model": "sandevistan:block/cabo_energia_down"
+      }
+    },
+    {
+      "when": {
+        "up": "true"
+      },
+      "apply": {
+        "model": "sandevistan:block/cabo_energia_up"
+      }
+    },
+    {
+      "when": {
+        "north": "true"
+      },
+      "apply": {
+        "model": "sandevistan:block/cabo_energia_north"
+      }
+    },
+    {
+      "when": {
+        "south": "true"
+      },
+      "apply": {
+        "model": "sandevistan:block/cabo_energia_south"
+      }
+    },
+    {
+      "when": {
+        "west": "true"
+      },
+      "apply": {
+        "model": "sandevistan:block/cabo_energia_west"
+      }
+    },
+    {
+      "when": {
+        "east": "true"
+      },
+      "apply": {
+        "model": "sandevistan:block/cabo_energia_east"
+      }
+    }
+  ]
+}
