@@ -128,13 +128,26 @@ public final class ModRegistries {
     public static void registerPoiStates() {
         try {
             var holder = net.minecraft.core.registries.BuiltInRegistries.POINT_OF_INTEREST_TYPE.getHolderOrThrow(RIPPERDOC_POI_KEY);
+            java.util.Map target = null;
             for (java.lang.reflect.Field f : net.minecraft.world.entity.ai.village.poi.PoiTypes.class.getDeclaredFields()) {
                 if (!java.lang.reflect.Modifier.isStatic(f.getModifiers()) || !java.util.Map.class.isAssignableFrom(f.getType())) continue;
                 f.setAccessible(true);
                 java.util.Map map = (java.util.Map) f.get(null);
                 if (map == null || map.isEmpty() || !(map.keySet().iterator().next() instanceof net.minecraft.world.level.block.state.BlockState)) continue;
-                for (net.minecraft.world.level.block.state.BlockState st : CLINICA.get().getStateDefinition().getPossibleStates()) map.put(st, holder);
+                target = map;
+                break;
             }
+            if (target == null) {
+                SandevistanMod.LOGGER_WARN("Ripperdoc POI: mapa de estados nao encontrado");
+                return;
+            }
+            int n = 0;
+            for (net.minecraft.world.level.block.state.BlockState st : CLINICA.get().getStateDefinition().getPossibleStates()) {
+                target.put(st, holder);
+                n++;
+            }
+            boolean ok = net.minecraft.world.entity.ai.village.poi.PoiTypes.forState(CLINICA.get().defaultBlockState()).isPresent();
+            SandevistanMod.LOGGER_WARN("Ripperdoc POI registrado: " + n + " estados, ativo=" + ok);
         } catch (ReflectiveOperationException | RuntimeException ex) {
             SandevistanMod.LOGGER_WARN("Nao foi possivel registrar o POI do Ripperdoc: " + ex);
         }

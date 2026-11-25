@@ -46,9 +46,8 @@ public class ExtItem extends Item {
 
     @Override
     public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientItemExtensions> consumer) {
-        if (slot == SandevistanData.EXT_JET || slot == SandevistanData.EXT_MANTIS_R || slot == SandevistanData.EXT_MANTIS_L) {
-            consumer.accept(com.sandevistanmod.client.ItemMeshRenderer.extension());
-        }
+        // o Forge chama isto dentro do construtor de Item (antes de 'slot' existir): registra para todos; so modelos builtin/entity usam o renderizador
+        consumer.accept(com.sandevistanmod.client.ItemMeshRenderer.extension());
     }
 
     public int slot() {

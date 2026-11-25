@@ -57,12 +57,12 @@ public final class SandevistanLogic {
     private static final Boost[][] BOOSTS = new Boost[SandevistanVariant.values().length][];
 
     private static Boost[] boosts(SandevistanVariant v) {
-        Boost[] b = BOOSTS[v.ordinal()];
-        if (b == null) {
+        Boost[] b;
+        {
             b = new Boost[] {
-                    new Boost(Attributes.ATTACK_SPEED, rl("attack_speed"), v.attackSpeedAdd(), AttributeModifier.Operation.ADDITION),
+                    // recarga de ataque conta ticks do servidor: multiplica pela razao 20/rate para durar o mesmo tempo REAL de sempre
+                    new Boost(Attributes.ATTACK_SPEED, rl("attack_speed"), 20.0 / Math.max(1f, TickRate.get()) - 1.0, AttributeModifier.Operation.MULTIPLY_TOTAL),
             };
-            BOOSTS[v.ordinal()] = b;
         }
         return b;
     }
@@ -772,7 +772,13 @@ public final class SandevistanLogic {
         SandevistanVariant v = SandevistanData.get(p).variant();
         for (Boost b : boosts(v)) {
             AttributeInstance inst = p.getAttribute(b.attr());
-            if (inst != null && inst.getModifier(b.id()) == null) {
+            if (inst == null) continue;
+            AttributeModifier cur = inst.getModifier(b.id());
+            if (cur != null && Math.abs(cur.getAmount() - b.amount()) > 1.0e-6) {
+                inst.removeModifier(b.id());
+                cur = null;
+            }
+            if (cur == null) {
                 inst.addTransientModifier(new AttributeModifier(b.id(), "sandevistan", b.amount(), b.op()));
             }
         }

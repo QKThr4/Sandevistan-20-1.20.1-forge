@@ -108,10 +108,6 @@ public class GearLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<Abs
         bx(ps, buffer, GEAR, light, DARK, -2.6f, 10.2f, -3.0f, 2.6f, 12.3f, -0.4f);
         bx(ps, buffer, GEAR, BRIGHT, CYAN, -2.6f, 8.4f, -2.6f, 2.6f, 9.0f, 2.6f);
         bx(ps, buffer, GEAR, light, DARK, -1.6f, 12.2f, -1.2f, 1.6f, 13.0f, 1.8f);
-        if (fly) {
-            float len = 2.4f + 1.1f * (float) Math.sin(age * 2.1f + phase);
-            bx(ps, buffer, GEAR, BRIGHT, FLAME, -1.0f, 13.0f, -0.6f, 1.0f, 13.0f + len, 1.2f);
-        }
         ps.popPose();
     }
 

@@ -124,19 +124,38 @@ public final class RipperdocEvents {
         try {
             ServerLevel level = p.serverLevel();
             StructureTemplate t = level.getStructureManager().get(CLINIC_STRUCTURE).orElse(null);
-            if (t == null) return false;
-            BlockPos origin = new BlockPos(p.getBlockX() - ENTRANCE_X, p.getBlockY() - ENTRANCE_Y, p.getBlockZ() + 2);
-            StructurePlaceSettings settings = new StructurePlaceSettings().setIgnoreEntities(false);
-            boolean ok = t.placeInWorld(level, origin, origin, settings, level.getRandom(), 2);
-            if (ok) {
-                // o jigsaw so serve para a vila: troca por um bloco de calcada
-                BlockPos jig = origin.offset(ENTRANCE_X, ENTRANCE_Y, 0);
-                if (level.getBlockState(jig).is(Blocks.JIGSAW)) level.setBlock(jig, Blocks.POLISHED_ANDESITE.defaultBlockState(), 2);
+            if (t == null) {
+                SandevistanMod.LOGGER_WARN("Clinic structure not found: " + CLINIC_STRUCTURE);
+                return false;
             }
-            return ok;
+            BlockPos origin = new BlockPos(p.getBlockX() - ENTRANCE_X, p.getBlockY() - ENTRANCE_Y, p.getBlockZ() + 2);
+            // o doutor e criado por codigo logo abaixo (o NBT de entidade da estrutura e so para as vilas)
+            StructurePlaceSettings settings = new StructurePlaceSettings().setIgnoreEntities(true);
+            t.placeInWorld(level, origin, origin, settings, level.getRandom(), 2);
+            // o jigsaw so serve para a vila: troca por um bloco de calcada
+            BlockPos jig = origin.offset(ENTRANCE_X, ENTRANCE_Y, 0);
+            if (level.getBlockState(jig).is(Blocks.JIGSAW)) level.setBlock(jig, Blocks.POLISHED_ANDESITE.defaultBlockState(), 2);
+            spawnDoctor(level, origin.offset(5, 2, 3));
+            return true;
         } catch (Exception ex) {
+            SandevistanMod.LOGGER_WARN("Could not build the Ripperdoc clinic: " + ex);
+            ex.printStackTrace();
             return false;
         }
+    }
+
+    private static void spawnDoctor(ServerLevel level, BlockPos at) {
+        Villager v = net.minecraft.world.entity.EntityType.VILLAGER.create(level);
+        if (v == null) return;
+        v.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, 180f, 0f);
+        v.setVillagerData(v.getVillagerData()
+                .setType(net.minecraft.world.entity.npc.VillagerType.PLAINS)
+                .setProfession(ModRegistries.RIPPERDOC.get()).setLevel(2));
+        v.setVillagerXp(10);
+        v.setPersistenceRequired();
+        v.setCustomName(net.minecraft.network.chat.Component.translatable("sandevistan.doc.name"));
+        v.setCustomNameVisible(true);
+        level.addFreshEntity(v);
     }
 
     // ---------- a clinica nas vilas ----------
