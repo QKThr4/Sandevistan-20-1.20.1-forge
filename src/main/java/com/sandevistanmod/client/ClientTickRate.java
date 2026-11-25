@@ -14,6 +14,7 @@ public final class ClientTickRate {
     private static Field timerField;
     private static Field msField;
     private static boolean failed;
+    private static boolean viaUnsafe;
 
     public static void apply(float rate) {
         rate = Math.max(1f, Math.min(20f, rate));
@@ -39,7 +40,21 @@ public final class ClientTickRate {
                     }
                 }
             }
-            msField.setFloat(timerField.get(mc), 1000f / rate);
+            Object timer = timerField.get(mc);
+            float ms = 1000f / rate;
+            try {
+                msField.setFloat(timer, ms);
+            } catch (IllegalAccessException | RuntimeException ex) {
+                // segunda via: escrita direta (o campo e final)
+                Field uf = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+                uf.setAccessible(true);
+                sun.misc.Unsafe u = (sun.misc.Unsafe) uf.get(null);
+                u.putFloat(timer, u.objectFieldOffset(msField), ms);
+                if (!viaUnsafe) {
+                    viaUnsafe = true;
+                    SandevistanMod.LOGGER_WARN("Relogio do cliente ajustado pela via alternativa.");
+                }
+            }
         } catch (ReflectiveOperationException | RuntimeException ex) {
             failed = true;
             SandevistanMod.LOGGER_WARN("Nao foi possivel desacelerar o relogio do cliente: " + ex);
