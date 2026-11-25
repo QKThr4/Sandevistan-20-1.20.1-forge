@@ -62,6 +62,9 @@ public final class SandevistanLogic {
             b = new Boost[] {
                     // recarga de ataque conta ticks do servidor: multiplica pela razao 20/rate para durar o mesmo tempo REAL de sempre
                     new Boost(Attributes.ATTACK_SPEED, rl("attack_speed"), 20.0 / Math.max(1f, TickRate.get()) - 1.0, AttributeModifier.Operation.MULTIPLY_TOTAL),
+                    // o cliente tambem roda devagar: gravidade extra (cair rapido) e nado mais rapido, como na 1.21.1
+                    new Boost(net.minecraftforge.common.ForgeMod.ENTITY_GRAVITY.get(), rl("gravity"), v.gravityAdd(), AttributeModifier.Operation.ADDITION),
+                    new Boost(net.minecraftforge.common.ForgeMod.SWIM_SPEED.get(), rl("swim"), 20.0 / Math.max(1f, TickRate.get()) - 1.0, AttributeModifier.Operation.MULTIPLY_TOTAL),
             };
         }
         return b;
@@ -782,6 +785,9 @@ public final class SandevistanLogic {
                 inst.addTransientModifier(new AttributeModifier(b.id(), "sandevistan", b.amount(), b.op()));
             }
         }
+        ensure(p, MobEffects.MOVEMENT_SPEED, 100, 200, v.speedAmp(), true);
+        // pulo maior (1.20.1 nao tem atributo de pulo: usa o efeito Pulo, escondido)
+        ensure(p, MobEffects.JUMP, 100, 200, Math.max(0, (int) Math.round(v.jumpAdd() / 0.1) - 1));
         if (v.resist >= 0) ensure(p, MobEffects.DAMAGE_RESISTANCE, 100, 200, v.resist, true);
         ensure(p, MobEffects.NIGHT_VISION, 300, 400, 0);
         if (v.strength >= 0) ensure(p, MobEffects.DAMAGE_BOOST, 100, 200, v.strength);
@@ -813,6 +819,7 @@ public final class SandevistanLogic {
             }
         }
         dropEffect(p, MobEffects.NIGHT_VISION);
+        dropEffect(p, MobEffects.JUMP);
         // os efeitos do Sandevistan saem mesmo se outro efeito (pocao, outro mod) os fundiu e tirou a marca de "ambiente"
         dropBoostEffect(p, MobEffects.MOVEMENT_SPEED, 0);
         dropBoostEffect(p, MobEffects.DAMAGE_RESISTANCE, 1);
@@ -840,9 +847,14 @@ public final class SandevistanLogic {
     public static void updateTickRate(MinecraftServer server) {
         float want = 20f;
         for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
+            if (!sp.isAlive() || sp.isRemoved()) continue;
             SandevistanData sd = SandevistanData.get(sp);
             // vale o modelo mais lento (o que mais desacelera) entre os jogadores com o Sandevistan ligado
-            if (sp.isAlive() && sd.active) want = Math.min(want, sd.variant().rate());
+            if (sd.active) want = Math.min(want, sd.variant().rate());
+        }
+        if (Math.abs(want - appliedRate) > 0.01f) {
+            // o cliente tambem desacelera (mundo suave, igual a 1.21.1)
+            PacketDistributor.sendToAllPlayers(new com.sandevistanmod.net.TickRatePayload(want));
         }
         appliedRate = want;
         TickRate.set(want);
@@ -858,6 +870,7 @@ public final class SandevistanLogic {
     }
 
     public static void sendStatesTo(ServerPlayer joiner) {
+        PacketDistributor.sendToPlayer(joiner, new com.sandevistanmod.net.TickRatePayload(appliedRate));
         for (Map.Entry<UUID, Integer> en : LAST_CODE.entrySet()) {
             if (en.getValue() > 0 && !en.getKey().equals(joiner.getUUID())) {
                 PacketDistributor.sendToPlayer(joiner, new StatePayload(en.getKey(), en.getValue()));

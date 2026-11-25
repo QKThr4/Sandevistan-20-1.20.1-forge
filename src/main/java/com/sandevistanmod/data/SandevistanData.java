@@ -264,7 +264,8 @@ public class SandevistanData implements INBTSerializable<CompoundTag> {
     public transient ItemStack swapRefB = ItemStack.EMPTY;
 
     public static SandevistanData get(Player p) {
-        return p.getCapability(SandevistanCaps.CAP).orElseThrow(() -> new IllegalStateException("Sandevistan capability missing"));
+        // jogador morto/removido perde a capability: devolve dados vazios em vez de derrubar o servidor
+        return p.getCapability(SandevistanCaps.CAP).orElseGet(SandevistanData::new);
     }
 
     public boolean has(int slot) {

@@ -4,7 +4,11 @@ import com.sandevistanmod.SandevistanMod;
 import com.sandevistanmod.data.SandevistanData;
 import com.sandevistanmod.net.ActionPayload;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -22,6 +26,19 @@ import com.sandevistanmod.net.PacketDistributor;
 public final class ClientGameEvents {
     private ClientGameEvents() {}
 
+    /** Queda: velocidade vertical nova = velocidade * FALL_MULT - FALL_ADD, limitada a FALL_CAP; os outros modelos escalam. */
+    private static final double FALL_MULT = 2.4;
+    private static final double FALL_ADD = 0.7;
+    private static final double FALL_CAP = 16.0;
+
+    private static int extraTicks() {
+        return ClientData.DATA.variant().extraTicks();
+    }
+
+    private static double waterGravityFix() {
+        return ClientData.DATA.variant().gravityAdd() / 16.0;
+    }
+
     private static boolean wasActive;
     @SubscribeEvent
     public static void tick(TickEvent.ClientTickEvent e) {
@@ -33,8 +50,30 @@ public final class ClientGameEvents {
         }
         softenHurtTilt(mc);
         PlayerGlitch.tickLocal();
-        // 1.20.1: o cliente roda a 20 ticks (so o servidor desacelera), entao nao ha compensacao de movimento aqui
         boolean on = ClientState.active(mc.player.getUUID());
+        if (on) {
+            Vec3 m = mc.player.getDeltaMovement();
+            double sc = ClientData.DATA.variant().scale();
+            if (!mc.player.onGround() && !mc.player.getAbilities().flying && !mc.player.isFallFlying()
+                    && !mc.player.isInWater() && !mc.player.isInLava() && !mc.player.onClimbable() && m.y < 0) {
+                mc.player.setDeltaMovement(m.x,
+                        Math.max(-FALL_CAP, m.y * (1.0 + (FALL_MULT - 1.0) * sc) - FALL_ADD * sc), m.z);
+            }
+            // escadas, trepadeiras, teia, arbusto de frutas e neve em po: o movimento do tick e multiplicado
+            boolean stuck = inStuckBlock(mc);
+            boolean climb = mc.player.onClimbable();
+            if (!mc.isPaused() && (stuck || climb)) {
+                Vec3 d = new Vec3(mc.player.getX() - mc.player.xo, mc.player.getY() - mc.player.yo,
+                        mc.player.getZ() - mc.player.zo);
+                if (d.lengthSqr() > 1.0E-8) {
+                    double mh = stuck ? 3.0 * sc : 0.0;
+                    double mv = (stuck ? 9.0 : 5.0) * sc;
+                    mc.player.move(MoverType.SELF, new Vec3(d.x * mh, d.y * mv, d.z * mh));
+                }
+            }
+        } else if (wasActive) {
+            mc.player.setDeltaMovement(Vec3.ZERO);
+        }
         wasActive = on;
         while (ModKeys.SCREEN.consumeClick()) {
             if (mc.screen == null) mc.setScreen(new SandevistanScreen());
@@ -48,6 +87,41 @@ public final class ClientGameEvents {
         while (ModKeys.XRAY.consumeClick()) {
             if (mc.screen == null && ClientData.DATA.extTier(SandevistanData.EXT_XRAY) != 0) PacketDistributor.sendToServer(new ActionPayload(20));
         }
+    }
+
+    /** Dentro da agua da para subir segurando pular e descer agachado, rapido; recargas de itens mais rapidas. */
+    @SubscribeEvent
+    public static void playerTick(TickEvent.PlayerTickEvent e) {
+        if (e.phase != TickEvent.Phase.END) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || e.player != mc.player || !ClientState.active(mc.player.getUUID())) return;
+        for (int i = 0; i < extraTicks(); i++) mc.player.getCooldowns().tick();
+        if (mc.player.isInWater() && !mc.player.getAbilities().flying) {
+            Vec3 m = mc.player.getDeltaMovement();
+            double y = m.y + waterGravityFix();
+            if (mc.options.keyJump.isDown()) y = Math.min(0.6, Math.max(y, 0.0) + 0.3);
+            else if (mc.options.keyShift.isDown()) y = Math.max(-0.6, y - 0.2);
+            mc.player.setDeltaMovement(m.x, y, m.z);
+        }
+    }
+
+    /** Comer, beber, arcos, bestas e tridente mais rapidos (o jogo roda devagar). */
+    @SubscribeEvent
+    public static void useTick(LivingEntityUseItemEvent.Tick e) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null && e.getEntity() == mc.player && ClientState.active(mc.player.getUUID())) {
+            e.setDuration(Math.max(1, e.getDuration() - extraTicks()));
+        }
+    }
+
+    private static boolean inStuckBlock(Minecraft mc) {
+        AABB box = mc.player.getBoundingBox().deflate(0.001);
+        for (BlockPos pos : BlockPos.betweenClosed(BlockPos.containing(box.minX, box.minY, box.minZ),
+                BlockPos.containing(box.maxX, box.maxY, box.maxZ))) {
+            var s = mc.level.getBlockState(pos);
+            if (s.is(Blocks.COBWEB) || s.is(Blocks.SWEET_BERRY_BUSH) || s.is(Blocks.POWDER_SNOW)) return true;
+        }
+        return false;
     }
 
     // ---- acima de 100% de ciberpsicose: sem usar itens nem abrir inventarios (so o menu) ----
@@ -114,6 +188,7 @@ public final class ClientGameEvents {
     /** Ao sair do mundo, limpa o estado do cliente para nao vazar para o proximo mundo. */
     @SubscribeEvent
     public static void loggingOut(ClientPlayerNetworkEvent.LoggingOut e) {
+        ClientTickRate.apply(20f);
         ClientState.clear();
         Afterimages.clear();
         ClientSounds.clear();

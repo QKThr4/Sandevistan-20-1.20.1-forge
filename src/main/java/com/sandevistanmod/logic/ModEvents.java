@@ -33,7 +33,7 @@ public final class ModEvents {
 
     @SubscribeEvent
     public static void playerTick(TickEvent.PlayerTickEvent e) {
-        if (e.phase == TickEvent.Phase.END && e.player instanceof ServerPlayer sp) {
+        if (e.phase == TickEvent.Phase.END && e.player instanceof ServerPlayer sp && sp.isAlive() && !sp.isRemoved()) {
             SandevistanLogic.tick(sp);
             // recargas de itens (perola, escudo...) tambem 85% mais rapidas
             if (SandevistanData.get(sp).active) {
@@ -96,10 +96,21 @@ public final class ModEvents {
      */
     @SubscribeEvent
     public static void breakSpeed(net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed e) {
-        if (!(e.getEntity() instanceof ServerPlayer sp)) return;
-        SandevistanData d = SandevistanData.get(sp);
+        net.minecraft.world.entity.player.Player pl = e.getEntity();
+        SandevistanData d;
+        boolean act;
+        if (pl instanceof ServerPlayer sp) {
+            d = SandevistanData.get(sp);
+            act = d.active;
+        } else if (pl.level().isClientSide) {
+            // o cliente tambem calcula o progresso de quebra (e roda devagar)
+            d = com.sandevistanmod.client.ClientData.DATA;
+            act = com.sandevistanmod.client.ClientState.active(pl.getUUID());
+        } else {
+            return;
+        }
         float m = 1f;
-        if (d.active) m *= 20f / Math.max(1f, com.sandevistanmod.compat.TickRate.get());
+        if (act) m *= 20f / Math.max(1f, com.sandevistanmod.compat.TickRate.get());
         if (d.chipActive(SandevistanData.CHIP_MINING)) m *= 2f;
         if (m != 1f) e.setNewSpeed(e.getNewSpeed() * m);
     }

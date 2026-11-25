@@ -43,6 +43,8 @@ public final class Net {
                 (m, ctx) -> toClient(ctx, () -> ClientNet.handleSync(m)));
         CHANNEL.registerMessage(id++, StatePayload.class, StatePayload::encode, StatePayload::decode,
                 (m, ctx) -> toClient(ctx, () -> ClientState.set(m.uuid(), m.code())));
+        CHANNEL.registerMessage(id++, TickRatePayload.class, TickRatePayload::encode, TickRatePayload::decode,
+                (m, ctx) -> toClient(ctx, () -> com.sandevistanmod.client.ClientTickRate.apply(m.rate())));
         CHANNEL.registerMessage(id++, OpenDoctorPayload.class, OpenDoctorPayload::encode, OpenDoctorPayload::decode,
                 (m, ctx) -> toClient(ctx, ClientNet::openDoctor));
         CHANNEL.registerMessage(id++, IntroPayload.class, IntroPayload::encode, IntroPayload::decode,
